@@ -332,7 +332,7 @@ function show(id){
 function flash(elId, text, kind="error"){
   const el = document.getElementById(elId);
   el.textContent = text;
-  el.className = msg show ${kind};
+  el.className = `msg show ${kind}`;
 }
 function clearFlash(elId){
   document.getElementById(elId).className = "msg";
@@ -559,7 +559,7 @@ async function removeCrush(enrollmentNo){
    picked me back too, so rules also unlock reading their profile. */
 async function refreshMatches(){
   const list = document.getElementById("matchList");
-  list.innerHTML = <div class="empty-state"><p>Checking for matches…</p></div>;
+  list.innerHTML = `<div class="empty-state"><p>Checking for matches…</p></div>`;
 
   const myEnrollment = currentProfile.enrollmentNo;
   const found = [];
@@ -584,7 +584,7 @@ async function refreshMatches(){
   if (found.length === 0) {
     list.innerHTML = `
       <div class="empty-state">
-        <span class="glyph">✳️</span>
+        <span class="glyph">✳</span>
         <p>No matches yet. They will appear here the moment someone you picked also picks you back.</p>
       </div>`;
     return;
