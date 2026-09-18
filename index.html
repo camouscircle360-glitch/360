@@ -1,1 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusCrush</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F6F4EF;
+    --bg-line: #E6E1D6;
+    --card: #FFFFFF;
+    --ink: #1C1F26;
+    --ink-soft: #5C6573;
+    --primary: #A42638;
+    --primary-dark: #7E1D2B;
+    --gold: #C99A3C;
+    --sage: #5F7A5A;
+    --danger: #B23A34;
+    --radius: 16px;
+    --shadow: 0 4px 20px rgba(0,0,0,0.04);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    background-image: linear-gradient(var(--bg-line) 1px, transparent 1px);
+    background-size: 100% 44px;
+    background-attachment: fixed;
+  }
+  h1, h2, h3 { font-family: 'Fraunces', serif; font-weight: 600; letter-spacing: -0.02em; }
 
+  .shell {
+    max-width: 480px; margin: 0 auto; min-height: 100vh; background: var(--bg);
+    border-left: 1px solid var(--bg-line); border-right: 1px solid var(--bg-line);
+    display: flex; flex-direction: column;
+  }
+  header.topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 22px 16px; border-bottom: 1px solid var(--bg-line);
+    background: rgba(246,244,239,0.9); backdrop-filter: blur(8px);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .brand { display: flex; align-items: baseline; gap: 8px; }
+  .brand .mark { width: 10px; height: 10px; border-radius: 50%; background: var(--primary); display: inline-block; transform: translateY(-1px); }
+  .brand h1 { font-size: 21px; }
+  .brand small { color: var(--ink-soft); font-size: 12px; display: block; margin-top: 2px; }
+  #signOutBtn {
+    background: none; border: 1px solid var(--bg-line); color: var(--ink-soft);
+    padding: 8px 14px; border-radius: 99px; font-size: 13px; cursor: pointer;
+    font-family: 'Inter', sans-serif; transition: all 0.2s;
+  }
+  #signOutBtn:hover { border-color: var(--primary); color: var(--primary); }
+
+  main { flex: 1; padding: 24px 20px 50px; }
+  .screen { display: none; }
+  .screen.active { display: block; animation: rise 0.35s ease; }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+  .lede { color: var(--ink-soft); font-size: 15px; line-height: 1.55; margin: 8px 0 24px; max-width: 38ch; }
+
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 13px; color: var(--ink-soft); margin-bottom: 6px; font-weight: 500; }
+  .field input {
+    width: 100%; padding: 13px 14px; border: 1px solid var(--bg-line);
+    border-radius: 12px; background: var(--card); font-size: 15px; color: var(--ink);
+    font-family: 'Inter', sans-serif; transition: border 0.2s;
+  }
+  .field input:focus { outline: none; border-color: var(--primary); }
+  .field .hint { font-size: 12px; color: var(--ink-soft); margin-top: 5px; line-height: 1.4; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 14px 20px; border-radius: 12px; border: none; cursor: pointer;
+    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 15px; width: 100%;
+    transition: all 0.2s;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  .switcher { text-align: center; margin-top: 18px; font-size: 14px; color: var(--ink-soft); }
+  .switcher a { color: var(--primary); font-weight: 600; text-decoration: none; cursor: pointer; }
+
+  .msg { font-size: 13px; padding: 11px 13px; border-radius: 10px; margin-bottom: 16px; display: none; }
+  .msg.show { display: block; }
+  .msg.error { background: #FBEAE9; color: var(--danger); border: 1px solid #F2CFCB; }
+  .msg.success { background: #EEF3EA; color: var(--sage); border: 1px solid #D8E3D2; }
+
+  .tabs { display: flex; gap: 4px; margin-bottom: 22px; border-bottom: 1px solid var(--bg-line); }
+  .tab {
+    flex: 1; text-align: center; padding: 12px 6px; font-size: 13.5px; font-weight: 600;
+    color: var(--ink-soft); cursor: pointer; border-bottom: 2px solid transparent;
+    background: none; border-top:none; border-left:none; border-right:none; font-family: 'Inter', sans-serif;
+  }
+  .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+  .slot-list { display: flex; flex-direction: column; gap: 11px; margin-bottom: 20px; }
+  .slot {
+    border: 1px dashed #C9C2B0; border-radius: 14px; padding: 14px 16px;
+    background: var(--card); display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; box-shadow: var(--shadow);
+  }
+  .slot.filled { border-style: solid; border-color: #EAD9C4; background: #FFFBF5; }
+  .slot .idx {
+    width: 28px; height: 28px; border-radius: 50%; background: var(--bg-line);
+    color: var(--ink-soft); font-size: 12px; font-weight: 700; display: flex;
+    align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .slot.filled .idx { background: var(--gold); color: #fff; }
+  .slot .info { flex: 1; font-size: 14px; min-width: 0; }
+  .slot .info .who { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .slot .info .dept { color: var(--ink-soft); font-size: 12.5px; margin-top: 2px; }
+  .slot .remove { background: none; border: none; color: var(--ink-soft); cursor: pointer; font-size: 18px; line-height: 1; padding: 4px; }
+  .slot .remove:hover { color: var(--danger); }
+  .slot .empty-label { color: var(--ink-soft); font-size: 14px; }
+
+  .add-form { border: 1px solid var(--bg-line); border-radius: 14px; padding: 18px; background: var(--card); margin-bottom: 18px; box-shadow: var(--shadow); }
+  .add-form .row { display: flex; gap: 10px; }
+  .add-form .row .field { flex: 1; }
+
+  .privacy-note {
+    display: flex; gap: 10px; padding: 14px 16px; background: #F1EEE4;
+    border-radius: 12px; font-size: 13px; color: var(--ink-soft); line-height: 1.5; margin-bottom: 20px;
+  }
+  .privacy-note .dot { color: var(--primary); flex-shrink: 0; }
+
+  .match-card {
+    border: 1px solid var(--bg-line); border-radius: 16px; padding: 18px;
+    background: var(--card); margin-bottom: 14px; display: flex; gap: 14px; align-items: center;
+    box-shadow: var(--shadow);
+  }
+  .match-card .avatar {
+    width: 48px; height: 48px; border-radius: 50%; background: var(--primary);
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-family: 'Fraunces', serif; font-weight: 600; font-size: 18px; flex-shrink: 0;
+  }
+  .match-card .details h3 { font-size: 16px; margin-bottom: 3px; }
+  .match-card .details p { font-size: 13px; color: var(--ink-soft); }
+  .match-card .badge {
+    margin-left: auto; font-size: 11px; font-weight: 700; color: var(--sage);
+    background: #EEF3EA; padding: 5px 10px; border-radius: 99px; white-space: nowrap;
+  }
+
+  .profile-card { background: var(--card); border: 1px solid var(--bg-line); border-radius: 18px; padding: 22px; box-shadow: var(--shadow); margin-bottom: 20px; }
+  .profile-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+  .profile-avatar {
+    width: 64px; height: 64px; border-radius: 50%; background: var(--primary);
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-family: 'Fraunces', serif; font-weight: 600; font-size: 26px; flex-shrink: 0;
+  }
+  .profile-header h2 { font-size: 20px; margin-bottom: 2px; }
+  .profile-header p { font-size: 13.5px; color: var(--ink-soft); }
+  .info-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--bg-line); font-size: 14px; }
+  .info-row:last-child { border-bottom: none; }
+  .info-row .label { color: var(--ink-soft); }
+  .info-row .value { font-weight: 500; text-align: right; max-width: 60%; word-break: break-word; }
+
+  .empty-state { text-align: center; padding: 50px 20px; color: var(--ink-soft); }
+  .empty-state .glyph { font-size: 36px; margin-bottom: 14px; display: block; }
+  .empty-state p { font-size: 14px; line-height: 1.6; max-width: 30ch; margin: 0 auto; }
+
+  .loader { display: flex; align-items: center; justify-content: center; min-height: 60vh; color: var(--ink-soft); font-size: 14px; }
+  .section-title { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <header class="topbar">
+    <div class="brand">
+      <span class="mark"></span>
+      <div>
+        <h1>CampusCrush</h1>
+        <small>Private until it's mutual</small>
+      </div>
+    </div>
+    <button id="signOutBtn" style="display:none;">Sign out</button>
+  </header>
+
+  <main>
+    <div id="loaderScreen" class="loader">Loading…</div>
+
+    <!-- SIGN IN -->
+    <section id="signInScreen" class="screen">
+      <h2>Sign in</h2>
+      <p class="lede">Enter your email and password to continue.</p>
+      <div id="signInMsg" class="msg error"></div>
+      <div class="field">
+        <label for="siEmail">Email</label>
+        <input type="email" id="siEmail" placeholder="yourname@gmail.com">
+      </div>
+      <div class="field">
+        <label for="siPassword">Password</label>
+        <input type="password" id="siPassword" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary" id="signInBtn">Sign in</button>
+      <p class="switcher">New here? <a id="goSignUp">Create an account</a></p>
+    </section>
+
+    <!-- SIGN UP -->
+    <section id="signUpScreen" class="screen">
+      <h2>Create your account</h2>
+      <p class="lede">Use any personal email. Choose a password and remember it.</p>
+      <div id="signUpMsg" class="msg error"></div>
+      <div class="field">
+        <label for="suEmail">Email</label>
+        <input type="email" id="suEmail" placeholder="yourname@gmail.com">
+      </div>
+      <div class="field">
+        <label for="suPassword">Password</label>
+        <input type="password" id="suPassword" placeholder="At least 6 characters">
+      </div>
+      <button class="btn btn-primary" id="signUpBtn">Create account</button>
+      <p class="switcher">Already registered? <a id="goSignIn">Sign in</a></p>
+    </section>
+
+    <!-- PROFILE SETUP -->
+    <section id="profileScreen" class="screen">
+      <h2>Set up your profile</h2>
+      <p class="lede">These details stay private. They are only shared with someone after a mutual match — never before.</p>
+      <div id="profileMsg" class="msg error"></div>
+      <div class="field">
+        <label for="pName">Full name</label>
+        <input type="text" id="pName" placeholder="As you want it shown">
+      </div>
+      <div class="field">
+        <label for="pDept">Department</label>
+        <input type="text" id="pDept" placeholder="e.g. Physics / Computer Science">
+      </div>
+      <div class="field">
+        <label for="pEnrollment">Enrollment number</label>
+        <input type="text" id="pEnrollment" placeholder="e.g. CS-2023-042">
+        <div class="hint">Required. This is the exact ID others must enter to add you as a crush — names alone can have typos or duplicates, enrollment numbers don't.</div>
+      </div>
+      <div class="field">
+        <label for="pYear">Year / Batch</label>
+        <input type="text" id="pYear" placeholder="e.g. 2nd Year / 2025">
+      </div>
+      <div class="field">
+        <label for="pContact">Contact to share on match</label>
+        <input type="text" id="pContact" placeholder="Instagram, phone or email">
+      </div>
+      <button class="btn btn-primary" id="saveProfileBtn">Save & continue</button>
+    </section>
+
+    <!-- HOME -->
+    <section id="homeScreen" class="screen">
+      <div class="tabs">
+        <button class="tab active" data-tab="crushes">My Crushes</button>
+        <button class="tab" data-tab="matches">Matches</button>
+        <button class="tab" data-tab="profile">My Profile</button>
+      </div>
+
+      <div id="crushesTab">
+        <div class="privacy-note">
+          <span class="dot">●</span>
+          <span>Your crush list is completely private. No one — not even the person you picked — can see it until a mutual match happens.</span>
+        </div>
+        <div id="slotList" class="slot-list"></div>
+        <div class="add-form" id="addForm" style="display:none;">
+          <div class="section-title">Add a crush</div>
+          <div class="row">
+            <div class="field">
+              <label for="addDept">Department</label>
+              <input type="text" id="addDept" placeholder="e.g. Physics">
+            </div>
+            <div class="field">
+              <label for="addEnrollment">Enrollment no.</label>
+              <input type="text" id="addEnrollment" placeholder="e.g. EC-2023-118">
+            </div>
+          </div>
+          <div id="addMsg" class="msg error"></div>
+          <button class="btn btn-primary" id="addCrushBtn">Add crush</button>
+        </div>
+      </div>
+
+      <div id="matchesTab" style="display:none;">
+        <button class="btn btn-primary" id="refreshMatchesBtn" style="margin-bottom:16px;">Check for matches</button>
+        <div id="matchList"></div>
+      </div>
+
+      <div id="profileTab" style="display:none;">
+        <div class="profile-card" id="myProfileCard"></div>
+        <p style="font-size:13px; color:var(--ink-soft); text-align:center; line-height:1.5;">
+          Your profile details are private.<br>Only shared after a mutual match.
+        </p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import {
+  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  onAuthStateChanged, signOut
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, setDoc, deleteDoc, collection,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+/* Apna Firebase project config */
+const firebaseConfig = {
+  apiKey: "AIzaSyDoIGliUQUk34KeKotgWZOGqkDh9CAvg88",
+  authDomain: "campuscircle-d32c5.firebaseapp.com",
+  projectId: "campuscircle-d32c5",
+  storageBucket: "campuscircle-d32c5.firebasestorage.app",
+  messagingSenderId: "803344344376",
+  appId: "1:803344344376:web:91d2569adbad5779c20dcd"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+/* ---------------- screen helpers ---------------- */
+const screens = ["loaderScreen","signInScreen","signUpScreen","profileScreen","homeScreen"];
+function show(id){
+  screens.forEach(s => {
+    const el = document.getElementById(s);
+    if (el) el.classList.toggle("active", s === id);
+  });
+  const loader = document.getElementById("loaderScreen");
+  if (loader) loader.style.display = id === "loaderScreen" ? "flex" : "none";
+}
+function flash(elId, text, kind="error"){
+  const el = document.getElementById(elId);
+  el.textContent = text;
+  el.className = msg show ${kind};
+}
+function clearFlash(elId){
+  document.getElementById(elId).className = "msg";
+}
+
+show("loaderScreen");
+
+document.getElementById("goSignUp").onclick = () => { clearFlash("signUpMsg"); show("signUpScreen"); };
+document.getElementById("goSignIn").onclick = () => { clearFlash("signInMsg"); show("signInScreen"); };
+
+/* ---------------- sign up / sign in ---------------- */
+document.getElementById("signUpBtn").onclick = async () => {
+  clearFlash("signUpMsg");
+  const email = document.getElementById("suEmail").value.trim();
+  const password = document.getElementById("suPassword").value;
+  if (password.length < 6) {
+    flash("signUpMsg", "Password should be at least 6 characters.");
+    return;
+  }
+  try {
+    await createUserWithEmailAndPassword(auth, email, password);
+  } catch (err) {
+    flash("signUpMsg", friendlyAuthError(err));
+  }
+};
+
+document.getElementById("signInBtn").onclick = async () => {
+  clearFlash("signInMsg");
+  const email = document.getElementById("siEmail").value.trim();
+  const password = document.getElementById("siPassword").value;
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (err) {
+    flash("signInMsg", friendlyAuthError(err));
+  }
+};
+
+document.getElementById("signOutBtn").onclick = () => signOut(auth);
+
+function friendlyAuthError(err){
+  const map = {
+    "auth/email-already-in-use": "That email is already registered — try signing in instead.",
+    "auth/invalid-email": "That doesn't look like a valid email.",
+    "auth/weak-password": "Password should be at least 6 characters.",
+    "auth/invalid-credential": "Incorrect email or password.",
+    "auth/wrong-password": "Incorrect email or password.",
+    "auth/user-not-found": "No account found with that email."
+  };
+  return map[err.code] || "Something went wrong. Please try again.";
+}
+
+/* ---------------- profile setup ---------------- */
+document.getElementById("saveProfileBtn").onclick = async () => {
+  clearFlash("profileMsg");
+  const name = document.getElementById("pName").value.trim();
+  const dept = document.getElementById("pDept").value.trim();
+  const enrollmentNo = document.getElementById("pEnrollment").value.trim().toUpperCase();
+  const year = document.getElementById("pYear").value.trim();
+  const contact = document.getElementById("pContact").value.trim();
+
+  if (!name || !dept || !enrollmentNo || !contact) {
+    flash("profileMsg", "Please fill Name, Department, Enrollment number and Contact.");
+    return;
+  }
+
+  const btn = document.getElementById("saveProfileBtn");
+  btn.disabled = true;
+  btn.textContent = "Saving...";
+
+  try {
+    const uid = auth.currentUser.uid;
+    const profileData = {
+      name, dept, enrollmentNo, year, contact,
+      email: auth.currentUser.email,
+      createdAt: Date.now()
+    };
+
+    // Full profile — only the owner can ever read this doc (see firestore.rules).
+    await setDoc(doc(db, "users", uid), profileData);
+
+    // enrollmentIndex lets the matching Cloud Function resolve
+    // "enrollment number -> uid" WITHOUT any client ever being able to
+    // browse other users' profiles or crush lists.
+    await setDoc(doc(db, "enrollmentIndex", enrollmentNo), { uid });
+
+    currentProfile = profileData;
+    enterHome();
+  } catch (err) {
+    console.error(err);
+    if (err.code === "permission-denied") {
+      flash("profileMsg", "That enrollment number is already registered to another account.");
+    } else {
+      flash("profileMsg", "Couldn't save. Please check your connection and try again.");
+    }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Save & continue";
+  }
+};
+
+/* ---------------- auth state / routing ---------------- */
+let currentProfile = null;
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    document.getElementById("signOutBtn").style.display = "none";
+    show("signInScreen");
+    return;
+  }
+  document.getElementById("signOutBtn").style.display = "inline-flex";
+  const snap = await getDoc(doc(db, "users", user.uid));
+  if (!snap.exists()) {
+    show("profileScreen");
+  } else {
+    currentProfile = snap.data();
+    enterHome();
+  }
+});
+
+function enterHome(){
+  show("homeScreen");
+  loadMyPicks();
+  renderMyProfile();
+}
+
+/* ---------------- tabs ---------------- */
+document.querySelectorAll(".tab").forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const tab = btn.dataset.tab;
+    document.getElementById("crushesTab").style.display = tab === "crushes" ? "block" : "none";
+    document.getElementById("matchesTab").style.display = tab === "matches" ? "block" : "none";
+    document.getElementById("profileTab").style.display = tab === "profile" ? "block" : "none";
+    if (tab === "matches") refreshMatches();
+  };
+});
+document.getElementById("refreshMatchesBtn").onclick = refreshMatches;
+
+/* ---------------- crush picks ---------------- */
+/* Har crush apna alag doc hai: crushPicks/{myUid}/picks/{targetEnrollmentNo}
+   Isse rules "kya isne mujhe pick kiya" check kar sakti hain bina
+   poori list expose kiye. */
+const MAX_CRUSHES = 5;
+let myPicks = []; // [{ enrollmentNo, dept }]
+
+async function loadMyPicks(){
+  const uid = auth.currentUser.uid;
+  const snap = await getDocs(collection(db, "crushPicks", uid, "picks"));
+  myPicks = snap.docs.map(d => ({ enrollmentNo: d.id, dept: d.data().dept || "" }));
+  renderSlots();
+}
+
+function renderSlots(){
+  const list = document.getElementById("slotList");
+  list.innerHTML = "";
+  for (let i = 0; i < MAX_CRUSHES; i++) {
+    const pick = myPicks[i];
+    const slot = document.createElement("div");
+    slot.className = "slot" + (pick ? " filled" : "");
+    if (pick) {
+      slot.innerHTML = `
+        <span class="idx">${i+1}</span>
+        <div class="info">
+          <div class="who">${escapeHtml(pick.enrollmentNo)}</div>
+          <div class="dept">${escapeHtml(pick.dept)}</div>
+        </div>
+        <button class="remove" title="Remove">✕</button>`;
+      slot.querySelector(".remove").onclick = () => removeCrush(pick.enrollmentNo);
+    } else {
+      slot.innerHTML = `
+        <span class="idx">${i+1}</span>
+        <span class="empty-label">Empty slot</span>`;
+    }
+    list.appendChild(slot);
+  }
+  document.getElementById("addForm").style.display = myPicks.length < MAX_CRUSHES ? "block" : "none";
+}
+
+document.getElementById("addCrushBtn").onclick = async () => {
+  clearFlash("addMsg");
+  const dept = document.getElementById("addDept").value.trim();
+  const enrollmentNo = document.getElementById("addEnrollment").value.trim().toUpperCase();
+
+  if (!dept || !enrollmentNo) {
+    flash("addMsg", "Please enter both department and enrollment number.");
+    return;
+  }
+  if (myPicks.length >= MAX_CRUSHES) {
+    flash("addMsg", "You have already used all 5 slots.");
+    return;
+  }
+  if (enrollmentNo === currentProfile?.enrollmentNo) {
+    flash("addMsg", "You can't add yourself.");
+    return;
+  }
+  if (myPicks.some(p => p.enrollmentNo === enrollmentNo)) {
+    flash("addMsg", "You have already added this person.");
+    return;
+  }
+  try {
+    const uid = auth.currentUser.uid;
+    await setDoc(doc(db, "crushPicks", uid, "picks", enrollmentNo), { dept });
+    document.getElementById("addDept").value = "";
+    document.getElementById("addEnrollment").value = "";
+    await loadMyPicks();
+  } catch (err) {
+    flash("addMsg", "Couldn't save. Please try again.");
+    console.error(err);
+  }
+};
+
+async function removeCrush(enrollmentNo){
+  const uid = auth.currentUser.uid;
+  await deleteDoc(doc(db, "crushPicks", uid, "picks", enrollmentNo));
+  await loadMyPicks();
+}
+
+/* ---------------- matches (computed fully client-side) ---------------- */
+/* For each crush I picked: look up their uid, then try to read
+   crushPicks/{theirUid}/picks/{myOwnEnrollmentNo}. Firestore rules only
+   allow that exact read — never their full list — and only because the
+   path segment equals MY OWN enrollment number. If it exists, they
+   picked me back too, so rules also unlock reading their profile. */
+async function refreshMatches(){
+  const list = document.getElementById("matchList");
+  list.innerHTML = <div class="empty-state"><p>Checking for matches…</p></div>;
+
+  const myEnrollment = currentProfile.enrollmentNo;
+  const found = [];
+
+  for (const pick of myPicks) {
+    try {
+      const idxSnap = await getDoc(doc(db, "enrollmentIndex", pick.enrollmentNo));
+      if (!idxSnap.exists()) continue; // enrollment number not registered
+      const targetUid = idxSnap.data().uid;
+
+      const theyPickedMeSnap = await getDoc(doc(db, "crushPicks", targetUid, "picks", myEnrollment));
+      if (!theyPickedMeSnap.exists()) continue; // not mutual (yet)
+
+      const profileSnap = await getDoc(doc(db, "users", targetUid));
+      if (!profileSnap.exists()) continue;
+      found.push(profileSnap.data());
+    } catch (err) {
+      console.error("Match check failed for", pick.enrollmentNo, err);
+    }
+  }
+
+  if (found.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <span class="glyph">✳️</span>
+        <p>No matches yet. They will appear here the moment someone you picked also picks you back.</p>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = "";
+  found.forEach(other => {
+    const card = document.createElement("div");
+    card.className = "match-card";
+    card.innerHTML = `
+      <div class="avatar">${escapeHtml((other.name || "?").charAt(0).toUpperCase())}</div>
+      <div class="details">
+        <h3>${escapeHtml(other.name)}</h3>
+        <p>${escapeHtml(other.dept)}${other.year ? " · " + escapeHtml(other.year) : ""} · ${escapeHtml(other.contact)}</p>
+      </div>
+      <span class="badge">Mutual match</span>`;
+    list.appendChild(card);
+  });
+}
+
+/* ---------------- my profile tab ---------------- */
+function renderMyProfile(){
+  if (!currentProfile) return;
+  const card = document.getElementById("myProfileCard");
+  const initial = (currentProfile.name || "?").charAt(0).toUpperCase();
+  card.innerHTML = `
+    <div class="profile-header">
+      <div class="profile-avatar">${escapeHtml(initial)}</div>
+      <div>
+        <h2>${escapeHtml(currentProfile.name)}</h2>
+        <p>${escapeHtml(currentProfile.dept)}${currentProfile.year ? " · " + escapeHtml(currentProfile.year) : ""}</p>
+      </div>
+    </div>
+    <div class="info-row">
+      <span class="label">Enrollment</span>
+      <span class="value">${escapeHtml(currentProfile.enrollmentNo || "—")}</span>
+    </div>
+    <div class="info-row">
+      <span class="label">Contact</span>
+      <span class="value">${escapeHtml(currentProfile.contact)}</span>
+    </div>
+    <div class="info-row">
+      <span class="label">Email</span>
+      <span class="value">${escapeHtml(currentProfile.email)}</span>
+    </div>
+  `;
+}
+
+function escapeHtml(str){
+  const d = document.createElement("div");
+  d.textContent = str ?? "";
+  return d.innerHTML;
+}
+</script>
+</body>
+</html>
